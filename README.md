@@ -1,5 +1,3 @@
-# CS174A Final Project
-
-## Interactive Sushi Bar
+# CS174A Final Project: Interactive Sushi Bar
 
 ### Description:
