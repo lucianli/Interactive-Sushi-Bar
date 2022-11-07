@@ -11,16 +11,18 @@ export class SushiBar extends Scene {
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
-            torus: new defs.Torus(15, 15),
+            torus: new defs.Torus(7, 25),
+            cube: new defs.Cube(),
+            rounded_capped_cylinder: new defs.Rounded_Capped_Cylinder(50, 50),
         };
 
         // *** Materials
         this.materials = {
-            test: new Material(new defs.Phong_Shader(),
+            phong_white: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
         };
 
-        this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(0, 5, 20), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
     make_control_panel() {
@@ -41,14 +43,43 @@ export class SushiBar extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
-        const light_position = vec4(0, 5, 5, 1);
+        const light_position = vec4(0, 15, 0, 1);
         // The parameters of the Light are: position, color, size
-        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10000)];
 
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         let model_transform = Mat4.identity();
 
-        this.shapes.torus.draw(context, program_state, model_transform, this.materials.test.override({color: yellow}));
+        //table
+        model_transform = model_transform.times(Mat4.translation(0, -5, 0))
+            .times(Mat4.scale(25, 1/2, 7));
+        this.shapes.cube.draw(context, program_state, model_transform, this.materials.phong_white);
+        model_transform = model_transform.times(Mat4.scale(1/25, 2, 1/7))
+            .times(Mat4.translation(0, 5, 0));
+
+        //back wall
+        model_transform = model_transform.times(Mat4.translation(0, -3, -7))
+            .times(Mat4.scale(25, 2.5, 1/2));
+        this.shapes.cube.draw(context, program_state, model_transform, this.materials.phong_white);
+        model_transform = model_transform.times(Mat4.scale(1/25, 1/2.5, 2))
+            .times(Mat4.translation(0, 3, 7));
+
+        //conveyor belt
+        model_transform = model_transform.times(Mat4.translation(0, 0, -7))
+            .times(Mat4.scale(25, 1/2, 4));
+        this.shapes.cube.draw(context, program_state, model_transform, this.materials.phong_white);
+        model_transform = model_transform.times(Mat4.scale(1/25, 2, 1/4))
+            .times(Mat4.translation(0, 0, 7));
+
+        //plate
+        model_transform = model_transform.times(Mat4.translation(0, -4.5, 1))
+            .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+            .times(Mat4.scale(4, 4, 1/2));
+        this.shapes.rounded_capped_cylinder.draw(context, program_state, model_transform, this.materials.phong_white);
+        model_transform = model_transform.times(Mat4.scale(1/4, 1/4, 2))
+            .times(Mat4.rotation(-Math.PI/2, 1, 0, 0))
+            .times(Mat4.translation(0, 4.5, -1));
+
     }
 }
 
@@ -122,6 +153,9 @@ class Gouraud_Shader extends Shader {
                 // The final normal vector in screen space.
                 N = normalize( mat3( model_transform ) * normal / squared_scale);
                 vertex_worldspace = ( model_transform * vec4( position, 1.0 ) ).xyz;
+                
+                vertex_color = vec4( shape_color.xyz * ambient, shape_color.w );
+                vertex_color.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
             } `;
     }
 
@@ -130,11 +164,11 @@ class Gouraud_Shader extends Shader {
         // A fragment is a pixel that's overlapped by the current triangle.
         // Fragments affect the final image or get discarded due to depth.
         return this.shared_glsl_code() + `
+            varying vec4 vertex_color;
+            
             void main(){                                                           
                 // Compute an initial (ambient) color:
-                gl_FragColor = vec4( shape_color.xyz * ambient, shape_color.w );
-                // Compute the final color with contributions from lights:
-                gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+                gl_FragColor = vertex_color;
             } `;
     }
 
@@ -224,15 +258,20 @@ class Ring_Shader extends Shader {
         uniform mat4 projection_camera_model_transform;
         
         void main(){
-          
+          gl_Position = projection_camera_model_transform * vec4( position, 1.0 );
+          point_position = vec4( position, 1.0 );
+          center = vec4( 0.0, 0.0, 0.0, 1.0 );
         }`;
     }
 
     fragment_glsl_code() {
         // ********* FRAGMENT SHADER *********
         return this.shared_glsl_code() + `
+        uniform vec4 shape_color;
+        
         void main(){
-          
+          float factor = 0.5 + 0.5 * sin(distance(point_position, center) * 75.0);
+          gl_FragColor = vec4(0.7 * factor, 0.5 * factor, 0.25 * factor, 1.0);
         }`;
     }
 }
