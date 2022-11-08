@@ -9,6 +9,13 @@ export class SushiBar extends Scene {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
 
+        this.segment_colors = [];
+
+        for (let i =0 ; i<41; i++) {
+            this.segment_colors.push(color(Math.random(), Math.random(), Math.random(), 1.0));
+        }
+
+
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             torus: new defs.Torus(7, 25),
@@ -31,6 +38,23 @@ export class SushiBar extends Scene {
         this.new_line();
     }
 
+    get_segment_transform(t, index) {
+        let left_bound = -21;
+        let right_bound = 21;
+        let x = (t + (index * 2)) % 48;
+        // if (x <= 21) {
+        //     x = -1.0 * x;
+        // }
+
+        let segment_transform = Mat4.translation(24-x, 0,-7)
+            .times(Mat4.scale(1, 0.1, 4))
+            .times(Mat4.translation(0, 6,0));
+
+        return segment_transform;
+
+
+    }
+
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
@@ -51,34 +75,56 @@ export class SushiBar extends Scene {
         let model_transform = Mat4.identity();
 
         //table
-        model_transform = model_transform.times(Mat4.translation(0, -5, 0))
+        let table_transform = model_transform.times(Mat4.translation(0, -5, 0))
             .times(Mat4.scale(25, 1/2, 7));
-        this.shapes.cube.draw(context, program_state, model_transform, this.materials.phong_white);
-        model_transform = model_transform.times(Mat4.scale(1/25, 2, 1/7))
-            .times(Mat4.translation(0, 5, 0));
+        this.shapes.cube.draw(context, program_state, table_transform, this.materials.phong_white);
+        
 
         //back wall
-        model_transform = model_transform.times(Mat4.translation(0, -3, -7))
+        let back_transform = model_transform.times(Mat4.translation(0, -3, -7))
             .times(Mat4.scale(25, 2.5, 1/2));
-        this.shapes.cube.draw(context, program_state, model_transform, this.materials.phong_white);
-        model_transform = model_transform.times(Mat4.scale(1/25, 1/2.5, 2))
-            .times(Mat4.translation(0, 3, 7));
+        this.shapes.cube.draw(context, program_state, back_transform, this.materials.phong_white);
+        
 
         //conveyor belt
-        model_transform = model_transform.times(Mat4.translation(0, 0, -7))
+        let conveyor_transform = model_transform.times(Mat4.translation(0, 0, -7))
             .times(Mat4.scale(25, 1/2, 4));
-        this.shapes.cube.draw(context, program_state, model_transform, this.materials.phong_white);
-        model_transform = model_transform.times(Mat4.scale(1/25, 2, 1/4))
-            .times(Mat4.translation(0, 0, 7));
+        this.shapes.cube.draw(context, program_state, conveyor_transform, this.materials.phong_white);
+
+        //conveyor belt segments
+        // let segment_transform = Mat4.identity()
+        //     .times(Mat4.translation(13,0,-7))
+        //     //.times(Mat4.translation(-21,0,-7))
+        //     .times(Mat4.scale(4, 0.1, 4))
+        //     .times(Mat4.translation(0, 6,0));
+        // this.shapes.cube.draw(context, program_state, segment_transform, this.materials.phong_white);
+        // segment_transform = Mat4.identity()
+        //     .times(Mat4.translation(21,0,-7))
+        //     .times(Mat4.scale(4, 0.1, 4))
+        //     .times(Mat4.translation(0, 6,0));
+
+        for (let i =0 ; i<32; i++) {
+            let segment_transform = this.get_segment_transform(t, i);
+
+            this.shapes.cube.draw(context, program_state, segment_transform, this.materials.phong_white.override({color:  this.segment_colors[i]}));
+
+
+        }
+
+
+        
 
         //plate
-        model_transform = model_transform.times(Mat4.translation(0, -4.5, 1))
+        let plate_transform = model_transform.times(Mat4.translation(0, -4.5, 1))
             .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
             .times(Mat4.scale(4, 4, 1/2));
-        this.shapes.rounded_capped_cylinder.draw(context, program_state, model_transform, this.materials.phong_white);
-        model_transform = model_transform.times(Mat4.scale(1/4, 1/4, 2))
-            .times(Mat4.rotation(-Math.PI/2, 1, 0, 0))
-            .times(Mat4.translation(0, 4.5, -1));
+        this.shapes.rounded_capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white);
+
+        
+
+
+
+
 
     }
 }
