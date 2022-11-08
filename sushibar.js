@@ -20,7 +20,7 @@ export class SushiBar extends Scene {
         this.shapes = {
             torus: new defs.Torus(7, 25),
             cube: new defs.Cube(),
-            rounded_capped_cylinder: new defs.Rounded_Capped_Cylinder(50, 50)
+            capped_cylinder: new defs.Capped_Cylinder(50, 50)
         };
 
         // *** Materials
@@ -79,7 +79,8 @@ export class SushiBar extends Scene {
 
         //conveyor belt
         let conveyor_transform = model_transform.times(Mat4.translation(0, 0, -7))
-            .times(Mat4.scale(25, 1/2, 4));
+            .times(Mat4.scale(25, 1/5, 4))
+            .times(Mat4.translation(0, -2.5, 0));
         this.shapes.cube.draw(context, program_state, conveyor_transform, this.materials.phong_white);
 
 
@@ -87,7 +88,7 @@ export class SushiBar extends Scene {
             let dist = this.get_segment_transform(t, i, 24);
             let segment_transform = Mat4.translation(dist, 0,-7)
             .times(Mat4.scale(1, 0.1, 4))
-            .times(Mat4.translation(0, 6,0));
+            .times(Mat4.translation(0, -2,0));
 
             this.shapes.cube.draw(context, program_state, segment_transform, this.materials.phong_white.override({color:  this.segment_colors[i]}));
 
@@ -98,7 +99,7 @@ export class SushiBar extends Scene {
         let tray_dist = this.get_segment_transform(t/5.0, 0, 5);
         let fish_transform = Mat4.rotation(Math.PI/2.0 ,0,1,0)
             .times(Mat4.scale(1,1,5))
-            .times(Mat4.translation(7,3,tray_dist));
+            .times(Mat4.translation(7,2.25, tray_dist));
         let tray_transform = fish_transform.times(Mat4.scale(2,0.2,1))
             .times(Mat4.translation(0,-6,0));
 
@@ -107,29 +108,29 @@ export class SushiBar extends Scene {
 
         let tray_leg2_transform = tray_leg1_transform.times(Mat4.translation(0,0,6));
 
-        this.shapes.rounded_capped_cylinder.draw(context, program_state, fish_transform, this.materials.phong_white.override({color: color(1.0,0,0,1.0)}));
+        this.shapes.capped_cylinder.draw(context, program_state, fish_transform, this.materials.phong_white.override({color: color(1.0,0,0,1.0)}));
         this.shapes.cube.draw(context, program_state, tray_transform, this.materials.phong_white);
         this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.phong_white);
         this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.phong_white);
 
 
-
-
-
-        
-
         //plate
         let plate_transform = model_transform.times(Mat4.translation(0, -4.5, 1))
             .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
-            .times(Mat4.scale(4, 4, 1/2));
-        this.shapes.rounded_capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white);
+            .times(Mat4.scale(4, 4, 1/3));
+        this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white.override({color: hex_color("#F2DA99")}));
 
-        
-
-
-
-
-
+        //chopsticks
+        // let block_transform = Mat4.translation(3, -1, 3);
+        // this.shapes.cube.draw(context, program_state, block_transform, this.materials.phong_white);
+        let chopsticks_transform = Mat4.translation(5, -4.4, 2)
+            .times(Mat4.rotation(-Math.PI/50, 0, 1, 0))
+            .times(Mat4.scale(1/12, 1/12, 3));
+        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#6E3D10")}));
+        chopsticks_transform = Mat4.translation(5.75, -4.4, 2)
+            .times(Mat4.rotation(Math.PI/50, 0, 1, 0))
+            .times(Mat4.scale(1/12, 1/12, 3));
+        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#6E3D10")}));
     }
 }
 
