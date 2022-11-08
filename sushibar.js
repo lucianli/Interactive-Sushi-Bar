@@ -20,7 +20,7 @@ export class SushiBar extends Scene {
         this.shapes = {
             torus: new defs.Torus(7, 25),
             cube: new defs.Cube(),
-            rounded_capped_cylinder: new defs.Rounded_Capped_Cylinder(50, 50),
+            rounded_capped_cylinder: new defs.Rounded_Capped_Cylinder(50, 50)
         };
 
         // *** Materials
@@ -38,20 +38,11 @@ export class SushiBar extends Scene {
         this.new_line();
     }
 
-    get_segment_transform(t, index) {
-        let left_bound = -21;
-        let right_bound = 21;
-        let x = (t + (index * 2)) % 48;
-        // if (x <= 21) {
-        //     x = -1.0 * x;
-        // }
-
-        let segment_transform = Mat4.translation(24-x, 0,-7)
-            .times(Mat4.scale(1, 0.1, 4))
-            .times(Mat4.translation(0, 6,0));
-
-        return segment_transform;
-
+    //Takes time t, an offset for the location (for loops) and a bounds
+    //will get x/y/z distance within bounds for a given time
+    get_segment_transform(t, offset, bound) {
+        let dist = bound - ((t + (offset * 2)) % (bound*2));
+        return dist;
 
     }
 
@@ -91,25 +82,38 @@ export class SushiBar extends Scene {
             .times(Mat4.scale(25, 1/2, 4));
         this.shapes.cube.draw(context, program_state, conveyor_transform, this.materials.phong_white);
 
-        //conveyor belt segments
-        // let segment_transform = Mat4.identity()
-        //     .times(Mat4.translation(13,0,-7))
-        //     //.times(Mat4.translation(-21,0,-7))
-        //     .times(Mat4.scale(4, 0.1, 4))
-        //     .times(Mat4.translation(0, 6,0));
-        // this.shapes.cube.draw(context, program_state, segment_transform, this.materials.phong_white);
-        // segment_transform = Mat4.identity()
-        //     .times(Mat4.translation(21,0,-7))
-        //     .times(Mat4.scale(4, 0.1, 4))
-        //     .times(Mat4.translation(0, 6,0));
 
         for (let i =0 ; i<32; i++) {
-            let segment_transform = this.get_segment_transform(t, i);
+            let dist = this.get_segment_transform(t, i, 24);
+            let segment_transform = Mat4.translation(dist, 0,-7)
+            .times(Mat4.scale(1, 0.1, 4))
+            .times(Mat4.translation(0, 6,0));
 
             this.shapes.cube.draw(context, program_state, segment_transform, this.materials.phong_white.override({color:  this.segment_colors[i]}));
 
-
         }
+
+        //tray of sushi
+
+        let tray_dist = this.get_segment_transform(t/5.0, 0, 5);
+        let fish_transform = Mat4.rotation(Math.PI/2.0 ,0,1,0)
+            .times(Mat4.scale(1,1,5))
+            .times(Mat4.translation(7,3,tray_dist));
+        let tray_transform = fish_transform.times(Mat4.scale(2,0.2,1))
+            .times(Mat4.translation(0,-6,0));
+
+        let tray_leg1_transform = tray_transform.times(Mat4.scale(1,2.5,0.20))
+            .times(Mat4.translation(0,-1.2,-3));
+
+        let tray_leg2_transform = tray_leg1_transform.times(Mat4.translation(0,0,6));
+
+        this.shapes.rounded_capped_cylinder.draw(context, program_state, fish_transform, this.materials.phong_white.override({color: color(1.0,0,0,1.0)}));
+        this.shapes.cube.draw(context, program_state, tray_transform, this.materials.phong_white);
+        this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.phong_white);
+        this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.phong_white);
+
+
+
 
 
         
