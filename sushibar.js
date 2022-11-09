@@ -12,7 +12,8 @@ export class SushiBar extends Scene {
         this.segment_colors = [];
 
         for (let i =0 ; i<41; i++) {
-            this.segment_colors.push(color(Math.random(), Math.random(), Math.random(), 1.0));
+            let tint = 0.2*Math.random()-0.1;
+            this.segment_colors.push(color(0.6+tint, 0.3+tint, 0.1+tint, 1.0));
         }
 
 
@@ -41,7 +42,7 @@ export class SushiBar extends Scene {
     //Takes time t, an offset for the location (for loops) and a bounds
     //will get x/y/z distance within bounds for a given time
     get_segment_transform(t, offset, bound) {
-        let dist = bound - ((t + (offset * 2)) % (bound*2));
+        let dist = bound - ((4*t + (offset * 2)) % (bound*2));
         return dist;
 
     }
@@ -69,7 +70,39 @@ export class SushiBar extends Scene {
         let table_transform = model_transform.times(Mat4.translation(0, -5, 0))
             .times(Mat4.scale(25, 1/2, 7));
         this.shapes.cube.draw(context, program_state, table_transform, this.materials.phong_white);
-        
+
+        //placemat
+        let placemat_transform = model_transform.times(Mat4.translation(0, -4.4, 1))
+            .times(Mat4.scale(7, 1/25, 5));
+        this.shapes.cube.draw(context, program_state, placemat_transform, this.materials.phong_white.override({color: hex_color("#FFF2CF")}));
+
+        //plate
+        let plate_transform = model_transform.times(Mat4.translation(0, -4.26, 1))
+            .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+            .times(Mat4.scale(4, 4, 1/5));
+        this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white);
+
+        //chopsticks
+        let chopsticks_transform = model_transform.times(Mat4.translation(5, -4.3, 2))
+            .times(Mat4.rotation(-Math.PI/50, 0, 1, 0))
+            .times(Mat4.scale(1/12, 1/12, 3));
+        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#6E3D10")}));
+        chopsticks_transform = model_transform.times(Mat4.translation(5.75, -4.3, 2))
+            .times(Mat4.rotation(Math.PI/50, 0, 1, 0))
+            .times(Mat4.scale(1/12, 1/12, 3));
+        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#6E3D10")}));
+
+        //bell
+        let bell_transform = model_transform.times(Mat4.translation(-9, -4, 4))
+            .times(Mat4.scale(2/3, 1/2, 2/3));
+        let bell_part_transform = model_transform.times(Mat4.translation(-9, -3.3, 4))
+            .times(Mat4.scale(1/3, 1/6, 1/3));
+        let handle_transform = model_transform.times(Mat4.translation(-9, -2.2, 4))
+            .times(Mat4.scale(1/8, 1, 1/8));
+
+        this.shapes.cube.draw(context, program_state, bell_transform, this.materials.phong_white.override({color: hex_color("#FFDB38")}));
+        this.shapes.cube.draw(context, program_state, bell_part_transform, this.materials.phong_white.override({color: hex_color("#FFDB38")}));
+        this.shapes.cube.draw(context, program_state, handle_transform, this.materials.phong_white.override({color: hex_color("#99540B")}));
 
         //back wall
         let back_transform = model_transform.times(Mat4.translation(0, -3, -7))
@@ -86,7 +119,7 @@ export class SushiBar extends Scene {
 
         for (let i =0 ; i<32; i++) {
             let dist = this.get_segment_transform(t, i, 24);
-            let segment_transform = Mat4.translation(dist, 0,-7)
+            let segment_transform = model_transform.times(Mat4.translation(dist, 0,-7))
             .times(Mat4.scale(1, 0.1, 4))
             .times(Mat4.translation(0, -2,0));
 
@@ -95,9 +128,8 @@ export class SushiBar extends Scene {
         }
 
         //tray of sushi
-
         let tray_dist = this.get_segment_transform(t/5.0, 0, 5);
-        let fish_transform = Mat4.rotation(Math.PI/2.0 ,0,1,0)
+        let fish_transform = model_transform.times(Mat4.rotation(Math.PI/2.0 ,0,1,0))
             .times(Mat4.scale(1,1,5))
             .times(Mat4.translation(7,2.25, tray_dist));
         let tray_transform = fish_transform.times(Mat4.scale(2,0.2,1))
@@ -113,24 +145,6 @@ export class SushiBar extends Scene {
         this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.phong_white);
         this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.phong_white);
 
-
-        //plate
-        let plate_transform = model_transform.times(Mat4.translation(0, -4.5, 1))
-            .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
-            .times(Mat4.scale(4, 4, 1/3));
-        this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white.override({color: hex_color("#F2DA99")}));
-
-        //chopsticks
-        // let block_transform = Mat4.translation(3, -1, 3);
-        // this.shapes.cube.draw(context, program_state, block_transform, this.materials.phong_white);
-        let chopsticks_transform = Mat4.translation(5, -4.4, 2)
-            .times(Mat4.rotation(-Math.PI/50, 0, 1, 0))
-            .times(Mat4.scale(1/12, 1/12, 3));
-        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#6E3D10")}));
-        chopsticks_transform = Mat4.translation(5.75, -4.4, 2)
-            .times(Mat4.rotation(Math.PI/50, 0, 1, 0))
-            .times(Mat4.scale(1/12, 1/12, 3));
-        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#6E3D10")}));
     }
 }
 
