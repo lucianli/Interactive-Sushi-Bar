@@ -133,7 +133,8 @@ export class SushiBar extends Scene {
         }
 
         //tray of sushi
-        let canFitMore = this.trayStartTimes.length == 0 || (this.trayStartTimes.length < 4 && t - this.trayStartTimes[this.trayStartTimes.length-1] > 3);
+        let noOverlap = t - this.trayStartTimes[this.trayStartTimes.length-1] > 3
+        let canFitMore = this.trayStartTimes.length == 0 || (this.trayStartTimes.length < 4 && noOverlap);
         if (this.sendMore && canFitMore) {
             this.trayStartTimes.push(t);
             this.sendMore = false;
@@ -152,29 +153,25 @@ export class SushiBar extends Scene {
 
             let tray_leg2_transform = tray_leg1_transform.times(Mat4.translation(0,0,6));
 
-            this.shapes.capped_cylinder.draw(context, program_state, fish_transform, this.materials.phong_white.override({color: color(1.0,0,0,1.0)}));
+            //draw sushi
+            let roll_transform = model_transform.times(Mat4.translation(tray_dist*5-0.5, 2.25, -6.75))
+                .times(Mat4.rotation(Math.PI/8, 0, 1, 0));
+            let sushipiece_transform = roll_transform.times(Mat4.translation(-1.5, -0.70, 0))
+                .times(Mat4.rotation(Math.PI/2.0, 1, 0, 0))
+                .times(Mat4.scale(1, 1, 1/1.5));
+            this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
+            for (let i = 0; i < 4; i++) {
+                sushipiece_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
+                    .times(Mat4.scale(1, 1, 1/1.5));
+                this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
+                roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
+            }
+
+            //draw tray
             this.shapes.cube.draw(context, program_state, tray_transform, this.materials.phong_white);
             this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.phong_white);
             this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.phong_white);
         }
-
-        // let tray_dist = this.get_segment_transform(t/5.0, 0, 5);
-        // let fish_transform = model_transform.times(Mat4.rotation(Math.PI/2.0 ,0,1,0))
-        //     .times(Mat4.scale(1,1,5))
-        //     .times(Mat4.translation(7,2.25, tray_dist));
-        // let tray_transform = fish_transform.times(Mat4.scale(2,0.2,1))
-        //     .times(Mat4.translation(0,-6,0));
-        //
-        // let tray_leg1_transform = tray_transform.times(Mat4.scale(1,2.5,0.20))
-        //     .times(Mat4.translation(0,-1.2,-3));
-        //
-        // let tray_leg2_transform = tray_leg1_transform.times(Mat4.translation(0,0,6));
-        //
-        // this.shapes.capped_cylinder.draw(context, program_state, fish_transform, this.materials.phong_white.override({color: color(1.0,0,0,1.0)}));
-        // this.shapes.cube.draw(context, program_state, tray_transform, this.materials.phong_white);
-        // this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.phong_white);
-        // this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.phong_white);
-
     }
 }
 
