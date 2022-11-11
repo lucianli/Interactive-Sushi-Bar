@@ -137,8 +137,8 @@ export class SushiBar extends Scene {
         let canFitMore = this.trayStartTimes.length == 0 || (this.trayStartTimes.length < 4 && noOverlap);
         if (this.sendMore && canFitMore) {
             this.trayStartTimes.push(t);
-            this.sendMore = false;
         }
+        this.sendMore = false;
         for (let i = 0; i < this.trayStartTimes.length; i++) {
             let timeOffset = t - this.trayStartTimes[i];
             let tray_dist = this.get_segment_transform(timeOffset/5.0, 0, 5);
