@@ -38,11 +38,13 @@ export class SushiBar extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-            this.key_triggered_button("Ring bell for more sushi", ["b"], () => this.sendMore = true);
+            this.key_triggered_button("Ring bell for more sushi", ["Control", "r"], () => this.sendMore = true);
             this.new_line();
             this.key_triggered_button("View bar", ["Control", "b"], () => this.attached = () => this.initial_camera_location);
             this.new_line();
             this.key_triggered_button("View plate", ["Control", "p"], () => this.attached = () => this.plate);
+            this.new_line();
+            this.key_triggered_button("View sushi", ["Control", "s"], () => this.attached = () => this.sushi);
         ;
         this.new_line();
     }
@@ -89,7 +91,9 @@ export class SushiBar extends Scene {
             .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
             .times(Mat4.scale(4, 4, 1/5));
         this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white);
-        this.plate = this.initial_camera_location.times(Mat4.translation(0, 6, 9));
+        //set plate matrix using placemat
+        //this.plate = this.initial_camera_location.times(Mat4.translation(0, 6, 9));
+        this.plate = placemat_transform.times(Mat4.scale(1/7, 25, 1/5)).times(Mat4.translation(0, 1, 8));
 
         //chopsticks
         let chopsticks_transform = model_transform.times(Mat4.translation(5, -4.3, 2))
@@ -170,6 +174,8 @@ export class SushiBar extends Scene {
                 this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
                 roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
             }
+            //set sushi matrix
+            this.sushi = roll_transform.times(Mat4.translation(-4, 1, 8));
 
             //draw tray
             this.shapes.cube.draw(context, program_state, tray_transform, this.materials.phong_white);
@@ -181,7 +187,14 @@ export class SushiBar extends Scene {
         if (this.attached != undefined)
         {
             let desired;
-            desired = this.attached();
+            if (this.attached() == this.initial_camera_location)
+            {
+                desired = this.attached();
+            }
+            else
+            {
+                desired = Mat4.inverse(this.attached());
+            }
             program_state.camera_inverse = desired.map((x, i) =>
                 Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
