@@ -38,9 +38,12 @@ export class SushiBar extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("Ring bell for more sushi", ["b"], () => {
-            this.sendMore = true;
-        });
+            this.key_triggered_button("Ring bell for more sushi", ["b"], () => this.sendMore = true);
+            this.new_line();
+            this.key_triggered_button("View bar", ["Control", "b"], () => this.attached = () => this.initial_camera_location);
+            this.new_line();
+            this.key_triggered_button("View plate", ["Control", "p"], () => this.attached = () => this.plate);
+        ;
         this.new_line();
     }
 
@@ -86,6 +89,7 @@ export class SushiBar extends Scene {
             .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
             .times(Mat4.scale(4, 4, 1/5));
         this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white);
+        this.plate = this.initial_camera_location.times(Mat4.translation(0, 6, 9));
 
         //chopsticks
         let chopsticks_transform = model_transform.times(Mat4.translation(5, -4.3, 2))
@@ -171,6 +175,15 @@ export class SushiBar extends Scene {
             this.shapes.cube.draw(context, program_state, tray_transform, this.materials.phong_white);
             this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.phong_white);
             this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.phong_white);
+        }
+
+        //camera matrix
+        if (this.attached != undefined)
+        {
+            let desired;
+            desired = this.attached();
+            program_state.camera_inverse = desired.map((x, i) =>
+                Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
     }
 }
