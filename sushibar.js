@@ -1,8 +1,10 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
+
+const {Cube, Torus, Capped_Cylinder, Phong_Shader, Textured_Phong} = defs;
 
 export class SushiBar extends Scene {
     constructor() {
@@ -19,15 +21,44 @@ export class SushiBar extends Scene {
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
-            torus: new defs.Torus(7, 25),
-            cube: new defs.Cube(),
-            capped_cylinder: new defs.Capped_Cylinder(50, 50)
+            torus: new Torus(7, 25),
+            cube: new Cube(),
+            capped_cylinder: new Capped_Cylinder(50, 50)
         };
 
         // *** Materials
         this.materials = {
-            phong_white: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+            phong_white: new Material(new Phong_Shader(), {
+                ambient: .4,
+                diffusivity: .6,
+                color: hex_color("#ffffff")
+            }),
+            placemat: new Material(new Phong_Shader(), {
+                ambient: 0.5,
+                diffusivity: 0.8,
+                color: hex_color("#c9ba9d")
+            }),
+            plate: new Material(new Texture_Plate(), {
+                color: hex_color("#000000"),
+                ambient: 1,
+                texture: new Texture("assets/plate.png")
+            }),
+            conveyor_belt: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"),
+                ambient: 1,
+                texture: new Texture("assets/belt.png")
+            }),
+            wall: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"),
+                ambient: 1,
+                texture: new Texture("assets/wall.png")
+            }),
+            table: new Material(new Phong_Shader(), {
+                color: hex_color("#ffffff"),
+                ambient: 1,
+                diffusivity: 1,
+                specularity: 1
+            })
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 5, 20), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -79,16 +110,17 @@ export class SushiBar extends Scene {
         //table
         let table_transform = model_transform.times(Mat4.translation(0, -5, 0))
             .times(Mat4.scale(25, 1/2, 7));
-        this.shapes.cube.draw(context, program_state, table_transform, this.materials.phong_white);
+        this.shapes.cube.draw(context, program_state, table_transform, this.materials.table);
 
         //placemat
         let placemat_transform = model_transform.times(Mat4.translation(0, -4.4, 1))
             .times(Mat4.scale(7, 1/25, 5));
-        this.shapes.cube.draw(context, program_state, placemat_transform, this.materials.phong_white.override({color: hex_color("#FFF2CF")}));
+        this.shapes.cube.draw(context, program_state, placemat_transform, this.materials.placemat);
 
         //plate
         let plate_transform = model_transform.times(Mat4.translation(0, -4.26, 1))
             .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+
             .times(Mat4.scale(4, 4, 1/5));
         this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white);
         //set plate matrix using placemat
@@ -98,12 +130,12 @@ export class SushiBar extends Scene {
         //chopsticks
         let chopsticks_transform = model_transform.times(Mat4.translation(5, -4.3, 2))
             .times(Mat4.rotation(-Math.PI/50, 0, 1, 0))
-            .times(Mat4.scale(1/12, 1/12, 3));
-        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#6E3D10")}));
+            .times(Mat4.scale(1/10, 1/10, 3));
+        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#965e23")}));
         chopsticks_transform = model_transform.times(Mat4.translation(5.75, -4.3, 2))
             .times(Mat4.rotation(Math.PI/50, 0, 1, 0))
-            .times(Mat4.scale(1/12, 1/12, 3));
-        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#6E3D10")}));
+            .times(Mat4.scale(1/10, 1/10, 3));
+        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#965e23")}));
 
         //bell
         let bell_transform = model_transform.times(Mat4.translation(-9, -4, 4))
@@ -120,14 +152,14 @@ export class SushiBar extends Scene {
         //back wall
         let back_transform = model_transform.times(Mat4.translation(0, -3, -7))
             .times(Mat4.scale(25, 2.5, 1/2));
-        this.shapes.cube.draw(context, program_state, back_transform, this.materials.phong_white);
+        this.shapes.cube.draw(context, program_state, back_transform, this.materials.wall);
         
 
         //conveyor belt
         let conveyor_transform = model_transform.times(Mat4.translation(0, 0, -7))
             .times(Mat4.scale(25, 1/5, 4))
             .times(Mat4.translation(0, -2.5, 0));
-        this.shapes.cube.draw(context, program_state, conveyor_transform, this.materials.phong_white);
+        this.shapes.cube.draw(context, program_state, conveyor_transform, this.materials.wall);
 
 
         for (let i =0 ; i<32; i++) {
@@ -136,7 +168,7 @@ export class SushiBar extends Scene {
             .times(Mat4.scale(1, 0.1, 4))
             .times(Mat4.translation(0, -2,0));
 
-            this.shapes.cube.draw(context, program_state, segment_transform, this.materials.phong_white.override({color:  this.segment_colors[i]}));
+            this.shapes.cube.draw(context, program_state, segment_transform, this.materials.conveyor_belt);
 
         }
 
@@ -198,6 +230,34 @@ export class SushiBar extends Scene {
             program_state.camera_inverse = desired.map((x, i) =>
                 Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
+    }
+}
+
+class Texture_Plate extends Textured_Phong {
+    fragment_glsl_code() {
+        return this.shared_glsl_code() + `
+            varying vec2 f_tex_coord;
+            uniform sampler2D texture;
+            uniform float animation_time;
+            
+            void main(){
+                // Sample the texture image in the correct place:
+                vec4 tex_color = texture2D( texture, f_tex_coord );
+                
+                float dist_to_center = sqrt(pow(f_tex_coord.x-0.5, 2.0) + pow(f_tex_coord.y-0.5, 2.0));
+                if (dist_to_center >= 0.3 && dist_to_center <= 0.36) {
+                    float color_shift = (dist_to_center-0.3)*3.5;
+                    tex_color.x -= color_shift;
+                    tex_color.y -= color_shift;
+                    tex_color.z -= color_shift;
+                }
+                
+                if( tex_color.w < .01 ) discard;
+                                                                         // Compute an initial (ambient) color:
+                gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
+                                                                         // Compute the final color with contributions from lights:
+                gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+        } `;
     }
 }
 
