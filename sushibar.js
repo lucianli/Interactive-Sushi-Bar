@@ -1,10 +1,12 @@
 import {defs, tiny} from './examples/common.js';
+import {Shape_From_File} from "./examples/obj-file-demo.js";
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
-const {Cube, Torus, Capped_Cylinder, Phong_Shader, Textured_Phong} = defs;
+const {Cube, Torus, Capped_Cylinder, Phong_Shader, Textured_Phong, Fake_Bump_Map} = defs;
+
 
 export class SushiBar extends Scene {
     constructor() {
@@ -23,7 +25,9 @@ export class SushiBar extends Scene {
         this.shapes = {
             torus: new Torus(7, 25),
             cube: new Cube(),
-            capped_cylinder: new Capped_Cylinder(50, 50)
+            capped_cylinder: new Capped_Cylinder(6, 24),
+            bell: new Shape_From_File("assets/bell.obj"),
+            plate: new Shape_From_File("assets/plate.obj")
         };
 
         // *** Materials
@@ -42,6 +46,11 @@ export class SushiBar extends Scene {
                 color: hex_color("#000000"),
                 ambient: 1,
                 texture: new Texture("assets/plate.png")
+            }),
+            bell: new Material(new Phong_Shader(), {
+                color: hex_color("#ab8d24"),
+                ambient: 1,
+                specularity: 0
             }),
             conveyor_belt: new Material(new Textured_Phong(), {
                 color: hex_color("#000000"),
@@ -62,12 +71,19 @@ export class SushiBar extends Scene {
                 color: hex_color("#111111"),
                 ambient: 1,
                 specularity: 1
+            }),
+            sushi: new Material(new Fake_Bump_Map(), {
+                color: hex_color("#111111"),
+                ambient: 1,
+                diffusivity: 0,
+                specularity: 0,
+                texture: new Texture("assets/rice.png")
             })
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 5, 20), vec3(0, 0, 0), vec3(0, 1, 0));
 
-        this.sushi = this.initial_camera_location;
+        this.sushi_cam = this.initial_camera_location;
 
         this.sendMore = false;
         this.trayStartTimes = [];
@@ -79,9 +95,9 @@ export class SushiBar extends Scene {
             this.new_line();
             this.key_triggered_button("View bar", ["Control", "b"], () => this.attached = () => this.initial_camera_location);
             this.new_line();
-            this.key_triggered_button("View plate", ["Control", "p"], () => this.attached = () => this.plate);
+            this.key_triggered_button("View plate", ["Control", "p"], () => this.attached = () => this.plate_cam);
             this.new_line();
-            this.key_triggered_button("View sushi", ["Control", "s"], () => this.attached = () => this.sushi);
+            this.key_triggered_button("View sushi", ["Control", "s"], () => this.attached = () => this.sushi_cam);
         ;
         this.new_line();
     }
@@ -91,7 +107,6 @@ export class SushiBar extends Scene {
     get_segment_transform(t, offset, bound) {
         let dist = bound - ((4*t + (offset * 2)) % (bound*2));
         return dist;
-
     }
 
     display(context, program_state) {
@@ -124,13 +139,13 @@ export class SushiBar extends Scene {
         this.shapes.cube.draw(context, program_state, placemat_transform, this.materials.placemat);
 
         //plate
-        let plate_transform = model_transform.times(Mat4.translation(0, -4.26, 1))
-            .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
-            .times(Mat4.scale(4, 4, 1/12));
-        this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.plate);
+        let plate_transform = model_transform.times(Mat4.translation(0, -4.2, 1))
+            .times(Mat4.scale(2, 1, 2))
+            .times(Mat4.rotation(-Math.PI/2, 1, 0, 0));
+        this.shapes.plate.draw(context, program_state, plate_transform, this.materials.plate);
         //set plate matrix using placemat
         //this.plate = this.initial_camera_location.times(Mat4.translation(0, 6, 9));
-        this.plate = placemat_transform.times(Mat4.scale(1/7, 25, 1/5))
+        this.plate_cam = placemat_transform.times(Mat4.scale(1/7, 25, 1/5))
             .times(Mat4.translation(0, 7, 8))
             .times(Mat4.rotation(-0.8, 1, 0, 0));
 
@@ -138,23 +153,11 @@ export class SushiBar extends Scene {
         let chopsticks_transform = model_transform.times(Mat4.translation(4.5, -4.3, 1))
             .times(Mat4.rotation(-Math.PI/50, 0, 1, 0))
             .times(Mat4.scale(1/10, 1/10, 3));
-        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#965e23")}));
+        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#763e03")}));
         chopsticks_transform = model_transform.times(Mat4.translation(5.25, -4.3, 1))
             .times(Mat4.rotation(Math.PI/50, 0, 1, 0))
             .times(Mat4.scale(1/10, 1/10, 3));
-        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#965e23")}));
-
-        //bell
-        let bell_transform = model_transform.times(Mat4.translation(-9, -4, 4))
-            .times(Mat4.scale(2/3, 1/2, 2/3));
-        let bell_part_transform = model_transform.times(Mat4.translation(-9, -3.3, 4))
-            .times(Mat4.scale(1/3, 1/6, 1/3));
-        let handle_transform = model_transform.times(Mat4.translation(-9, -2.2, 4))
-            .times(Mat4.scale(1/8, 1, 1/8));
-
-        this.shapes.cube.draw(context, program_state, bell_transform, this.materials.phong_white.override({color: hex_color("#FFDB38")}));
-        this.shapes.cube.draw(context, program_state, bell_part_transform, this.materials.phong_white.override({color: hex_color("#FFDB38")}));
-        this.shapes.cube.draw(context, program_state, handle_transform, this.materials.phong_white.override({color: hex_color("#99540B")}));
+        this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#763e03")}));
 
         //back wall
         let back_transform = model_transform.times(Mat4.translation(0, -3, -7))
@@ -176,7 +179,19 @@ export class SushiBar extends Scene {
             .times(Mat4.translation(0, -2,0));
 
             this.shapes.cube.draw(context, program_state, segment_transform, this.materials.conveyor_belt);
+        }
 
+        let roll_transform = model_transform.times(Mat4.translation(0, 2.25, 12))
+            .times(Mat4.rotation(Math.PI/8, 0, 1, 0));
+        let sushipiece_transform = roll_transform.times(Mat4.translation(-1.5, -0.70, 0))
+            .times(Mat4.rotation(Math.PI/2.0, 1, 0, 0))
+            .times(Mat4.scale(1, 1, 1/1.5));
+        this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.sushi);
+        for (let i = 0; i < 4; i++) {
+            sushipiece_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
+                .times(Mat4.scale(1, 1, 1/1.5));
+            this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.sushi);
+            roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
         }
 
         //tray of sushi
@@ -206,21 +221,34 @@ export class SushiBar extends Scene {
             let sushipiece_transform = roll_transform.times(Mat4.translation(-1.5, -0.70, 0))
                 .times(Mat4.rotation(Math.PI/2.0, 1, 0, 0))
                 .times(Mat4.scale(1, 1, 1/1.5));
-            this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
+            this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.sushi);
             for (let i = 0; i < 4; i++) {
                 sushipiece_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
                     .times(Mat4.scale(1, 1, 1/1.5));
-                this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
+                this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.sushi);
                 roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
             }
             //set sushi matrix
-            this.sushi = roll_transform.times(Mat4.translation(-4, 1, 8));
+            this.sushi_cam = roll_transform.times(Mat4.translation(-4, 1, 8));
 
             //draw tray
             this.shapes.cube.draw(context, program_state, tray_transform, this.materials.tray);
             this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.tray);
             this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.tray);
         }
+
+        //bell
+        let bell_transform = model_transform;
+        if (t - this.trayStartTimes[this.trayStartTimes.length-1] < 1) {
+            bell_transform = bell_transform.times(Mat4.translation(-10, -2.5, 3))
+                .times(Mat4.rotation(-0.35, 1, 0, 0))
+                .times(Mat4.rotation(0.3*Math.sin(15*t), 0, 0, 1));
+        }
+        else {
+            bell_transform = bell_transform.times(Mat4.translation(-10, -3.3, 3))
+                .times(Mat4.rotation(-0.35, 1, 0, 0));
+        }
+        this.shapes.bell.draw(context, program_state, bell_transform, this.materials.bell);
 
         //camera matrix
         if (this.attached != undefined)
@@ -237,6 +265,10 @@ export class SushiBar extends Scene {
             program_state.camera_inverse = desired.map((x, i) =>
                 Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
+    }
+
+    show_explanation(document_element) {
+        document_element.innerHTML += "<h1>CS174A Final Project: Interactive Sushi Bar</h1>";
     }
 }
 
