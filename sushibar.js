@@ -33,10 +33,10 @@ export class SushiBar extends Scene {
                 diffusivity: .6,
                 color: hex_color("#ffffff")
             }),
-            placemat: new Material(new Phong_Shader(), {
-                ambient: 0.5,
-                diffusivity: 0.8,
-                color: hex_color("#c9ba9d")
+            placemat: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"),
+                ambient: 1,
+                texture: new Texture("assets/placemat.png")
             }),
             plate: new Material(new Texture_Plate(), {
                 color: hex_color("#000000"),
@@ -53,15 +53,21 @@ export class SushiBar extends Scene {
                 ambient: 1,
                 texture: new Texture("assets/wall.png")
             }),
-            table: new Material(new Phong_Shader(), {
-                color: hex_color("#ffffff"),
+            table: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"),
                 ambient: 1,
-                diffusivity: 1,
+                texture: new Texture("assets/table.png")
+            }),
+            tray: new Material(new Phong_Shader(), {
+                color: hex_color("#111111"),
+                ambient: 1,
                 specularity: 1
             })
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 5, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+
+        this.sushi = this.initial_camera_location;
 
         this.sendMore = false;
         this.trayStartTimes = [];
@@ -114,25 +120,26 @@ export class SushiBar extends Scene {
 
         //placemat
         let placemat_transform = model_transform.times(Mat4.translation(0, -4.4, 1))
-            .times(Mat4.scale(7, 1/25, 5));
+            .times(Mat4.scale(7, 1/50, 5));
         this.shapes.cube.draw(context, program_state, placemat_transform, this.materials.placemat);
 
         //plate
         let plate_transform = model_transform.times(Mat4.translation(0, -4.26, 1))
             .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
-
-            .times(Mat4.scale(4, 4, 1/5));
-        this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.phong_white);
+            .times(Mat4.scale(4, 4, 1/12));
+        this.shapes.capped_cylinder.draw(context, program_state, plate_transform, this.materials.plate);
         //set plate matrix using placemat
         //this.plate = this.initial_camera_location.times(Mat4.translation(0, 6, 9));
-        this.plate = placemat_transform.times(Mat4.scale(1/7, 25, 1/5)).times(Mat4.translation(0, 1, 8));
+        this.plate = placemat_transform.times(Mat4.scale(1/7, 25, 1/5))
+            .times(Mat4.translation(0, 7, 8))
+            .times(Mat4.rotation(-0.8, 1, 0, 0));
 
         //chopsticks
-        let chopsticks_transform = model_transform.times(Mat4.translation(5, -4.3, 2))
+        let chopsticks_transform = model_transform.times(Mat4.translation(4.5, -4.3, 1))
             .times(Mat4.rotation(-Math.PI/50, 0, 1, 0))
             .times(Mat4.scale(1/10, 1/10, 3));
         this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#965e23")}));
-        chopsticks_transform = model_transform.times(Mat4.translation(5.75, -4.3, 2))
+        chopsticks_transform = model_transform.times(Mat4.translation(5.25, -4.3, 1))
             .times(Mat4.rotation(Math.PI/50, 0, 1, 0))
             .times(Mat4.scale(1/10, 1/10, 3));
         this.shapes.cube.draw(context, program_state, chopsticks_transform, this.materials.phong_white.override({color: hex_color("#965e23")}));
@@ -210,9 +217,9 @@ export class SushiBar extends Scene {
             this.sushi = roll_transform.times(Mat4.translation(-4, 1, 8));
 
             //draw tray
-            this.shapes.cube.draw(context, program_state, tray_transform, this.materials.phong_white);
-            this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.phong_white);
-            this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.phong_white);
+            this.shapes.cube.draw(context, program_state, tray_transform, this.materials.tray);
+            this.shapes.cube.draw(context, program_state, tray_leg1_transform, this.materials.tray);
+            this.shapes.cube.draw(context, program_state, tray_leg2_transform, this.materials.tray);
         }
 
         //camera matrix
