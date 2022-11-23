@@ -6,7 +6,7 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
-const {Cube, Torus, Capped_Cylinder, Phong_Shader, Textured_Phong, Fake_Bump_Map} = defs;
+const {Cube, Torus, Capped_Cylinder, Rounded_Capped_Cylinder, Phong_Shader, Textured_Phong, Fake_Bump_Map, Surface_Of_Revolution} = defs;
 
 
 export class SushiBar extends Scene {
@@ -21,13 +21,14 @@ export class SushiBar extends Scene {
             this.segment_colors.push(color(0.6+tint, 0.3+tint, 0.1+tint, 1.0));
         }
 
+        const bell_points = Vector3.cast([0, 0, 1.25], [0.3, 0, 1.2], [0.4, 0, 0.85], [0.45, 0, 0.65], [0.53, 0, 0.5], [0.65, 0, 0.4], [0.78, 0, 0.27], [0.82, 0, 0.18], [0.85, 0, 0], [0, 0, 0], [0, 0, 1.25]);
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             torus: new Torus(7, 25),
             cube: new Cube(),
             capped_cylinder: new Capped_Cylinder(6, 24),
-            bell: new Shape_From_File("assets/bell.obj"),
+            bell: new Surface_Of_Revolution(15, 15, bell_points),
             plate: new Shape_From_File("assets/plate.obj")
         };
 
@@ -49,7 +50,12 @@ export class SushiBar extends Scene {
                 texture: new Texture("assets/plate.png")
             }),
             bell: new Material(new Phong_Shader(), {
-                color: hex_color("#ab8d24"),
+                color: hex_color("#8f6e01"),
+                ambient: 1,
+                specularity: 0.5
+            }),
+            handle: new Material(new Phong_Shader(), {
+                color: hex_color("#361e03"),
                 ambient: 1,
                 specularity: 0
             }),
@@ -222,16 +228,24 @@ export class SushiBar extends Scene {
 
         //bell
         let bell_transform = model_transform;
+        let handle_transform = model_transform;
         if (this.ringbell_time != 0 && t - this.ringbell_time < 1) {
-            bell_transform = bell_transform.times(Mat4.translation(-10, -2.5, 3))
-                .times(Mat4.rotation(-0.35, 1, 0, 0))
-                .times(Mat4.rotation(0.3*Math.sin(15*t), 0, 0, 1));
+            handle_transform = handle_transform.times(Mat4.translation(-10, -1.75, 3))
+                .times(Mat4.rotation(-Math.PI/2, 1, 0, 0))
+                .times(Mat4.rotation(0.2*Math.sin(15*t), 0, 1, 0))
+                .times(Mat4.scale(1/7, 1/7, 2));
+            bell_transform = handle_transform.times(Mat4.scale(7, 7, 1/2))
+                .times(Mat4.translation(0, 0, -2.25));
         }
         else {
-            bell_transform = bell_transform.times(Mat4.translation(-10, -3.3, 3))
-                .times(Mat4.rotation(-0.35, 1, 0, 0));
+            bell_transform = bell_transform.times(Mat4.translation(-10, -4.5, 3))
+                .times(Mat4.rotation(-Math.PI/2, 1, 0, 0));
+            handle_transform = handle_transform.times(Mat4.translation(-10, -2.25, 3))
+                .times(Mat4.rotation(-Math.PI/2, 1, 0, 0))
+                .times(Mat4.scale(1/7, 1/7, 2));
         }
         this.shapes.bell.draw(context, program_state, bell_transform, this.materials.bell);
+        this.shapes.capped_cylinder.draw(context, program_state, handle_transform, this.materials.handle);
 
         //camera matrix
         if (this.attached != undefined)
