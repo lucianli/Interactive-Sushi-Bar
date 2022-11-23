@@ -87,8 +87,8 @@ export class SushiBar extends Scene {
         this.sushi_cam = this.initial_camera_location;
 
         this.sendMore = false;
-        this.trayStartTimes = [];
         this.sushi_rolls = [];
+        this.ringbell_time = 0;
     }
 
     make_control_panel() {
@@ -190,6 +190,7 @@ export class SushiBar extends Scene {
         let canFitMore = this.sushi_rolls.length == 0 || (this.sushi_rolls.length < 4 && noOverlap);
         if (this.sendMore && canFitMore) {
             this.sushi_rolls.push(new Sushi(t));
+            this.ringbell_time = t;
         }
         this.sendMore = false;
 
@@ -211,7 +212,7 @@ export class SushiBar extends Scene {
             }
 
             //set sushi camera pointer
-            this.sushi = roll_transform.times(Mat4.translation(-4, 1, 8));
+            this.sushi_cam = roll_transform.times(Mat4.translation(-4, 1, 8));
 
             //draw tray
             this.shapes.cube.draw(context, program_state, tray_transform, this.materials.tray);
@@ -221,7 +222,7 @@ export class SushiBar extends Scene {
 
         //bell
         let bell_transform = model_transform;
-        if (t - this.trayStartTimes[this.trayStartTimes.length-1] < 1) {
+        if (this.ringbell_time != 0 && t - this.ringbell_time < 1) {
             bell_transform = bell_transform.times(Mat4.translation(-10, -2.5, 3))
                 .times(Mat4.rotation(-0.35, 1, 0, 0))
                 .times(Mat4.rotation(0.3*Math.sin(15*t), 0, 0, 1));
