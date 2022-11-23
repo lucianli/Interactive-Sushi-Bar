@@ -181,19 +181,6 @@ export class SushiBar extends Scene {
             this.shapes.cube.draw(context, program_state, segment_transform, this.materials.conveyor_belt);
         }
 
-        let roll_transform = model_transform.times(Mat4.translation(0, 2.25, 12))
-            .times(Mat4.rotation(Math.PI/8, 0, 1, 0));
-        let sushipiece_transform = roll_transform.times(Mat4.translation(-1.5, -0.70, 0))
-            .times(Mat4.rotation(Math.PI/2.0, 1, 0, 0))
-            .times(Mat4.scale(1, 1, 1/1.5));
-        this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.sushi);
-        for (let i = 0; i < 4; i++) {
-            sushipiece_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
-                .times(Mat4.scale(1, 1, 1/1.5));
-            this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.sushi);
-            roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
-        }
-
         //tray of sushi
         let noOverlap = t - this.trayStartTimes[this.trayStartTimes.length-1] > 3
         let canFitMore = this.trayStartTimes.length == 0 || (this.trayStartTimes.length < 4 && noOverlap);
