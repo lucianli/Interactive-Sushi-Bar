@@ -1,4 +1,5 @@
 import {defs, tiny} from './examples/common.js';
+import {Sushi} from "./sushi.js";
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
@@ -65,6 +66,7 @@ export class SushiBar extends Scene {
 
         this.sendMore = false;
         this.trayStartTimes = [];
+        this.sushi_rolls = [];
     }
 
     make_control_panel() {
@@ -161,7 +163,7 @@ export class SushiBar extends Scene {
             .times(Mat4.translation(0, -2.5, 0));
         this.shapes.cube.draw(context, program_state, conveyor_transform, this.materials.wall);
 
-
+        //draws each belt segment
         for (let i =0 ; i<32; i++) {
             let dist = this.get_segment_transform(t, i, 24);
             let segment_transform = model_transform.times(Mat4.translation(dist, 0,-7))
@@ -172,41 +174,32 @@ export class SushiBar extends Scene {
 
         }
 
-        //tray of sushi
-        let noOverlap = t - this.trayStartTimes[this.trayStartTimes.length-1] > 3
-        let canFitMore = this.trayStartTimes.length == 0 || (this.trayStartTimes.length < 4 && noOverlap);
+        
+        //Draw Sushi Rolls
+
+        let noOverlap = this.sushi_rolls.length == 0 || (t - this.sushi_rolls[this.sushi_rolls.length - 1].get_start() > 3);
+        let canFitMore = this.sushi_rolls.length == 0 || (this.sushi_rolls.length < 4 && noOverlap);
         if (this.sendMore && canFitMore) {
-            this.trayStartTimes.push(t);
+            this.sushi_rolls.push(new Sushi(t));
         }
         this.sendMore = false;
-        for (let i = 0; i < this.trayStartTimes.length; i++) {
-            let timeOffset = t - this.trayStartTimes[i];
-            let tray_dist = this.get_segment_transform(timeOffset/5.0, 0, 5);
-            let fish_transform = model_transform.times(Mat4.rotation(Math.PI/2.0 ,0,1,0))
-                .times(Mat4.scale(1,1,5))
-                .times(Mat4.translation(7,2.25, tray_dist));
-            let tray_transform = fish_transform.times(Mat4.scale(2,0.2,1))
-                .times(Mat4.translation(0,-6,0));
+        for (let i = 0; i < this.sushi_rolls.length; i++) {
+            let cur_sushi = this.sushi_rolls[i];
 
-            let tray_leg1_transform = tray_transform.times(Mat4.scale(1,2.5,0.20))
-                .times(Mat4.translation(0,-1.2,-3));
-
-            let tray_leg2_transform = tray_leg1_transform.times(Mat4.translation(0,0,6));
-
-            //draw sushi
-            let roll_transform = model_transform.times(Mat4.translation(tray_dist*5-0.5, 2.25, -6.75))
-                .times(Mat4.rotation(Math.PI/8, 0, 1, 0));
-            let sushipiece_transform = roll_transform.times(Mat4.translation(-1.5, -0.70, 0))
-                .times(Mat4.rotation(Math.PI/2.0, 1, 0, 0))
-                .times(Mat4.scale(1, 1, 1/1.5));
-            this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
+            let [tray_transform, tray_leg1_transform, tray_leg2_transform] = cur_sushi.get_tray_transforms(t);
+            let [roll_transform, first_piece_transform, roll_pieces_transform] = cur_sushi.get_sushi_transforms(t);
+            
+            //draw horizontal sushi
+            this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
+            
+            //draw vertical sushis
             for (let i = 0; i < 4; i++) {
-                sushipiece_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
-                    .times(Mat4.scale(1, 1, 1/1.5));
-                this.shapes.capped_cylinder.draw(context, program_state, sushipiece_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
+                this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform, this.materials.phong_white.override({color: hex_color("#107528")}));
                 roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
+                roll_pieces_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
+                    .times(Mat4.scale(1, 1, 1/1.5));
             }
-            //set sushi matrix
+            //set sushi camera pointer
             this.sushi = roll_transform.times(Mat4.translation(-4, 1, 8));
 
             //draw tray
