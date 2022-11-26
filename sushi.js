@@ -10,15 +10,34 @@ export class Sushi {
         //start time is the time the sushi was created
         this.start_time = start_time;
 
+        //enum 
+        //"placed": placed on table
+        //"on belt": still on belt
+        //"placing": currently in process of selecting a location to place the sushi
+        this.tray_location = "on belt";
+        
+        //will be set when placed
+        this.placed_coords = null;
+
     }
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
+
 
     get_start() {
         return this.start_time;
     }
+
+    //gets x dist on belt
     get_sushi_dist(t, offset, bound) {
         let dist = bound - ((4*t + (offset * 2)) % (bound*2));
         return dist;
+
+    }
+
+    //sets defined coordinates for placed sushi
+    place_sushi(coords) {
+        this.tray_location = "placed";
+        this.placed_coords = coords;
 
     }
 
@@ -26,6 +45,7 @@ export class Sushi {
     get_tray_transforms(t) {
         let time_offset = t - this.start_time;
         let tray_dist = this.get_sushi_dist(time_offset / 5.0, 0, 5);
+        //console.log("traydist", tray_dist*2);
         let tray_transform = Mat4.identity()
             .times(Mat4.rotation(Math.PI/2.0 ,0,1,0))
             .times(Mat4.scale(1,1,5))
