@@ -262,69 +262,7 @@ export class SushiBar extends Scene {
         // shadow_pass: true if this is the second pass that draw the shadow.
         // draw_light_source: true if we want to draw the light source.
         // draw_shadow: true if we want to draw the shadow
-        let canvas = context.canvas;
-        const mouse_position = (e, rect = canvas.getBoundingClientRect()) =>
-            vec((e.clientX - (rect.left + rect.right) / 2) / ((rect.right - rect.left) / 2),
-                (e.clientY - (rect.bottom + rect.top) / 2) / ((rect.top - rect.bottom) / 2));
-
-        canvas.addEventListener("mousedown", e => {
-            e.preventDefault();
-            let coords = this.my_mouse_down(e, mouse_position(e), context, program_state);
-
-
-            //already have a selected sushi that we are placing
-            if (this.selected_sushi != null) {
-
-                //check to see if intersects with any placed sushis
-                for (let i = 0; i < this.sushi_rolls.length; i++) {
-                    let cur_sushi = this.sushi_rolls[i];
-                    let width = 5;
-                    if (cur_sushi.tray_location == "placed" && coords[0] < cur_sushi.placed_coords[0] + width && coords[0] > cur_sushi.placed_coords[0] - width) {
-                        return;
-                    }
-                }
-
-                //Successfully place sushi and set coordinates
-                coords[1] = 0.0;
-                coords[2] = 12.0;
-                this.sushi_rolls[this.selected_sushi].place_sushi(coords);
-                this.selected_sushi = null;
-            } else {
-                //don't have a selected sushi
-                if(this.sushi_rolls.length > 0) {
-                    if(coords[1] < 4.1 && coords[1] > 2.9) {
-                        for (let i = 0; i < this.sushi_rolls.length; i++) {
-                            let cur_sushi = this.sushi_rolls[i];
-                            //if sushi is not on belt, don't care
-                            if (cur_sushi.tray_location != "on belt") {
-                                continue;
-                            }
-                            t = program_state.animation_time / 1000
-                            let x_dist = 2 * cur_sushi.get_sushi_dist((t-cur_sushi.start_time) / 5.0, 0, 5);
-                            let range = 2;
-                            //check to see if we hit the hitbox of the sushi
-                            if(coords[0] < x_dist + range && coords[0] > x_dist - range) {
-                                //We are now placing that sushi
-                                cur_sushi.tray_location = "placing";
-                                this.selected_sushi = i;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-
-        canvas.addEventListener("mousemove", e => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect()
-            let coords = this.my_mouse_down(e, mouse_position(e), context, program_state);
-            coords[1] = 0.0;
-            coords[2] = 12.0;
-
-            //sets class var mouse coords to the position of the mouse
-            this.mouse_coord = coords;
-        });
+        
 
         let model_transform = Mat4.identity();
         program_state.draw_shadow = draw_shadow;
@@ -507,6 +445,70 @@ export class SushiBar extends Scene {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(this.initial_camera_location);
+
+            let canvas = context.canvas;
+            const mouse_position = (e, rect = canvas.getBoundingClientRect()) =>
+                vec((e.clientX - (rect.left + rect.right) / 2) / ((rect.right - rect.left) / 2),
+                    (e.clientY - (rect.bottom + rect.top) / 2) / ((rect.top - rect.bottom) / 2));
+
+            canvas.addEventListener("mousedown", e => {
+                e.preventDefault();
+                let coords = this.my_mouse_down(e, mouse_position(e), context, program_state);
+
+
+                //already have a selected sushi that we are placing
+                if (this.selected_sushi != null) {
+
+                    //check to see if intersects with any placed sushis
+                    for (let i = 0; i < this.sushi_rolls.length; i++) {
+                        let cur_sushi = this.sushi_rolls[i];
+                        let width = 5;
+                        if (cur_sushi.tray_location == "placed" && coords[0] < cur_sushi.placed_coords[0] + width && coords[0] > cur_sushi.placed_coords[0] - width) {
+                            return;
+                        }
+                    }
+
+                    //Successfully place sushi and set coordinates
+                    coords[1] = 0.0;
+                    coords[2] = 12.0;
+                    this.sushi_rolls[this.selected_sushi].place_sushi(coords);
+                    this.selected_sushi = null;
+                } else {
+                    //don't have a selected sushi
+                    if(this.sushi_rolls.length > 0) {
+                        if(coords[1] < 7.0 && coords[1] > 5.0) {
+                            for (let i = 0; i < this.sushi_rolls.length; i++) {
+                                let cur_sushi = this.sushi_rolls[i];
+                                //if sushi is not on belt, don't care
+                                if (cur_sushi.tray_location != "on belt") {
+                                    continue;
+                                }
+                                t = program_state.animation_time / 1000
+                                let x_dist = 2 * cur_sushi.get_sushi_dist((t-cur_sushi.start_time) / 5.0, 0, 5);
+                                let range = 2;
+                                //check to see if we hit the hitbox of the sushi
+                                if(coords[0] < x_dist + range && coords[0] > x_dist - range) {
+                                    //We are now placing that sushi
+                                    cur_sushi.tray_location = "placing";
+                                    this.selected_sushi = i;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+
+            canvas.addEventListener("mousemove", e => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect()
+                let coords = this.my_mouse_down(e, mouse_position(e), context, program_state);
+                coords[1] = 0.0;
+                coords[2] = 12.0;
+
+                //sets class var mouse coords to the position of the mouse
+                this.mouse_coord = coords;
+            });
         }
 
         //camera matrix
