@@ -93,7 +93,7 @@ export class SushiBar extends Scene {
             }),
             pure: new Material(new Color_Phong_Shader(), {}),
             tray: new Material(new Shadow_Textured_Phong_Shader(1), {
-                color: color(0.1, 0.1, 0.1, 1),
+                color: hex_color("#542903"),
                 ambient: 1, diffusivity: 0.6, specularity: 0.5,
                 color_texture: null,
                 light_depth_texture: null
@@ -111,24 +111,17 @@ export class SushiBar extends Scene {
                 color: hex_color("bb2222"), ambient: 0.8, diffusivity: 1, specularity: 1
             }),
             rice: new Material(new Fake_Bump_Map(), {
-                color: hex_color("#111111"),
-                ambient: 1,
-                diffusivity: 0,
-                specularity: 0,
+                color: hex_color("#000000"),
+                ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/rice.png")
             }),
             seaweed: new Material(new Textured_Phong(), {
-                color: hex_color("#111111"),
-                ambient: 1,
-                diffusivity: 0,
-                specularity: 0,
+                color: hex_color("#000000"), ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/seaweed.jpg")
             }),
             salmon: new Material(new Fake_Bump_Map(), {
-                color: hex_color("#111111"),
-                ambient: 1,
-                diffusivity: 0,
-                specularity: 0,
+                color: hex_color("#000000"),
+                ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/salmon.jpg")
             })
         };
@@ -294,7 +287,8 @@ export class SushiBar extends Scene {
                 .times(Mat4.translation(0, -5, 0))
                 .times(Mat4.rotation(-Math.PI/2, 1, 0, 0));
             this.shapes.lightbulb.draw(context, program_state, light_transform, this.materials.light);
-            let lightshade_transform = light_transform.times(Mat4.translation(0, 0, 1.15));
+            let lightshade_transform = light_transform.times(Mat4.scale(1.5, 1.5, 1))
+                .times(Mat4.translation(0, 0, 1.25));
             this.shapes.lightshade.draw(context, program_state, lightshade_transform, this.materials.lightshade);
         }
 
