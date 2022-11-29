@@ -109,6 +109,27 @@ export class SushiBar extends Scene {
             }),
             lightshade: new Material(new Phong_Shader(), {
                 color: hex_color("bb2222"), ambient: 0.8, diffusivity: 1, specularity: 1
+            }),
+            rice: new Material(new Fake_Bump_Map(), {
+                color: hex_color("#111111"),
+                ambient: 1,
+                diffusivity: 0,
+                specularity: 0,
+                texture: new Texture("assets/rice.png")
+            }),
+            seaweed: new Material(new Textured_Phong(), {
+                color: hex_color("#111111"),
+                ambient: 1,
+                diffusivity: 0,
+                specularity: 0,
+                texture: new Texture("assets/seaweed.jpg")
+            }),
+            salmon: new Material(new Fake_Bump_Map(), {
+                color: hex_color("#111111"),
+                ambient: 1,
+                diffusivity: 0,
+                specularity: 0,
+                texture: new Texture("assets/salmon.jpg")
             })
         };
 
@@ -383,12 +404,15 @@ export class SushiBar extends Scene {
                     .times(Mat4.scale(1, 1, 1/1.5));
             }
 
-            //draw horizontal sushi
-            this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform, shadow_pass ? this.materials.sushi : this.materials.pure);
-
+            this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform.times(Mat4.scale(1.1, 1.1, 0.9)), this.materials.seaweed);
+            this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform.times(Mat4.scale(0.5, 0.5, 1.1)), this.materials.salmon);
+            this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform, this.materials.rice);
+            
             //draw vertical sushis
             for (let i = 0; i < 4; i++) {
-                this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform, shadow_pass ? this.materials.sushi : this.materials.pure);
+                this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform.times(Mat4.scale(1.1, 1.1, 0.9)), this.materials.seaweed);
+                this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform.times(Mat4.scale(0.5, 0.5, 1.1)), this.materials.salmon);
+                this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform, this.materials.rice);
                 roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
                 roll_pieces_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
                     .times(Mat4.scale(1, 1, 1/1.5));
