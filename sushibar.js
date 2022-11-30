@@ -26,6 +26,8 @@ export class SushiBar extends Scene {
         const bell_points = Vector3.cast([0, 0, 1.25], [0.3, 0, 1.2], [0.4, 0, 0.85], [0.45, 0, 0.65], [0.53, 0, 0.5], [0.65, 0, 0.4], [0.78, 0, 0.27], [0.82, 0, 0.18], [0.85, 0, 0], [0, 0, 0], [0, 0, 1.25]);
         const lightbulb_points = Vector3.cast([0, 0, 0.8], [0.15, 0, 0.8], [0.2, 0, 0.5], [0.3, 0, 0.3], [0.45, 0, 0.1], [0.5, 0, 0], [0.52, 0, -0.1], [0.5, 0, -0.2], [0.45, 0, -0.3], [0.3, 0, -0.42], [0.15, 0, -0.48], [0, 0, -0.5]);
         const lightshade_points = Vector3.cast([0, 0, 2], [0.15, 0, 2], [0.15, 0, 0], [1.25, 0, -1.25], [1.1, 0, -1.25], [0, 0, 0]);
+        const rice_points = Vector3.cast([0, 0, 1], [0.25, 0, 1], [0.5, 0, 0.77], [0.5, 0, -0.77], [0.25, 0, -1], [0, 0, -1]);
+        const nigiri_points = Vector3.cast([0, 0, 0.5], [0.2, 0, 0.95], [0.3, 0, 0.95], [0.5, 0, 0.72], [0.5, 0, -0.72], [0.3, 0, -0.95], [0.2, 0, -0.95], [0, 0, -0.5]);
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
@@ -36,7 +38,9 @@ export class SushiBar extends Scene {
             plate: new Shape_From_File("assets/plate.obj"),
             sphere: new Subdivision_Sphere(4),
             lightbulb: new Surface_Of_Revolution(15, 15, lightbulb_points),
-            lightshade: new Surface_Of_Revolution(15, 15, lightshade_points)
+            lightshade: new Surface_Of_Revolution(20, 20, lightshade_points),
+            rice: new Surface_Of_Revolution(8, 8, rice_points),
+            nigiri: new Surface_Of_Revolution(8, 8, nigiri_points)
         };
 
         // *** Materials
@@ -93,8 +97,8 @@ export class SushiBar extends Scene {
             }),
             pure: new Material(new Color_Phong_Shader(), {}),
             tray: new Material(new Shadow_Textured_Phong_Shader(1), {
-                color: hex_color("#542903"),
-                ambient: 1, diffusivity: 0.6, specularity: 0.5,
+                color: hex_color("#442003"),
+                ambient: 1, diffusivity: 1, specularity: 0.5,
                 color_texture: null,
                 light_depth_texture: null
             }),
@@ -111,7 +115,7 @@ export class SushiBar extends Scene {
                 color: hex_color("bb2222"), ambient: 0.8, diffusivity: 1, specularity: 1
             }),
             rice: new Material(new Fake_Bump_Map(), {
-                color: hex_color("#000000"),
+                color: hex_color("#111111"),
                 ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/rice.png")
             }),
@@ -123,6 +127,16 @@ export class SushiBar extends Scene {
                 color: hex_color("#000000"),
                 ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/salmon.jpg")
+            }),
+            tuna: new Material(new Fake_Bump_Map(), {
+                color: hex_color("#000000"),
+                ambient: 1, diffusivity: 0, specularity: 0,
+                texture: new Texture("assets/tuna.png")
+            }),
+            yellowtail: new Material(new Fake_Bump_Map(), {
+                color: hex_color("#000000"),
+                ambient: 1, diffusivity: 0, specularity: 0,
+                texture: new Texture("assets/yellowtail.png")
             })
         };
 
@@ -276,8 +290,6 @@ export class SushiBar extends Scene {
         // shadow_pass: true if this is the second pass that draw the shadow.
         // draw_light_source: true if we want to draw the light source.
         // draw_shadow: true if we want to draw the shadow
-        
-
         let model_transform = Mat4.identity();
         program_state.draw_shadow = draw_shadow;
 
@@ -398,22 +410,46 @@ export class SushiBar extends Scene {
                     .times(Mat4.scale(1, 1, 1/1.5));
             }
 
-            this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform.times(Mat4.scale(1.1, 1.1, 0.9)), this.materials.seaweed);
-            this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform.times(Mat4.scale(0.5, 0.5, 1.1)), this.materials.salmon);
-            this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform, this.materials.rice);
-            
-            //draw vertical sushis
-            for (let i = 0; i < 4; i++) {
-                this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform.times(Mat4.scale(1.1, 1.1, 0.9)), this.materials.seaweed);
-                this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform.times(Mat4.scale(0.5, 0.5, 1.1)), this.materials.salmon);
-                this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform, this.materials.rice);
-                roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
-                roll_pieces_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
-                    .times(Mat4.scale(1, 1, 1/1.5));
+            if (i % 2 == 0) {
+                //draw horizontal sushi
+                this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform.times(Mat4.scale(1.1, 1.1, 0.9)), this.materials.seaweed);
+                this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform.times(Mat4.scale(0.5, 0.5, 1.1)), this.materials.salmon);
+                this.shapes.capped_cylinder.draw(context, program_state, first_piece_transform, this.materials.rice);
+
+                //draw vertical sushi
+                for (let i = 0; i < 4; i++) {
+                    this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform.times(Mat4.scale(1.1, 1.1, 0.9)), this.materials.seaweed);
+                    this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform.times(Mat4.scale(0.5, 0.5, 1.1)), this.materials.salmon);
+                    this.shapes.capped_cylinder.draw(context, program_state, roll_pieces_transform, this.materials.rice);
+                    roll_transform = roll_transform.times(Mat4.translation(0.8, 0, 0));
+                    roll_pieces_transform = roll_transform.times(Mat4.rotation(Math.PI / 2.0, 0, 1, 0))
+                        .times(Mat4.scale(1, 1, 1/1.5));
+                }
+            } else {
+                //draw yellowtail sushi
+                let rice_transform = roll_transform.times(Mat4.translation(-1.5, -0.5, 0))
+                    .times(Mat4.scale(1.2, 1.3, 1.4));
+                this.shapes.rice.draw(context, program_state, rice_transform, this.materials.rice);
+                let nigiri_transform = roll_transform.times(Mat4.translation(-1.5, -0.3, 0))
+                    .times(Mat4.scale(1.3, 1.3, 1.4));
+                this.shapes.nigiri.draw(context, program_state, nigiri_transform, this.materials.yellowtail);
+
+                //draw tuna sushi
+                this.shapes.rice.draw(context, program_state, rice_transform.times(Mat4.translation(1.5, 0, 0)), this.materials.rice);
+                this.shapes.nigiri.draw(context, program_state, nigiri_transform.times(Mat4.translation(1.4, 0, 0)), this.materials.tuna);
+
+                //draw salmon sushi
+                this.shapes.rice.draw(context, program_state, rice_transform.times(Mat4.translation(3, 0, 0)), this.materials.rice);
+                this.shapes.nigiri.draw(context, program_state, nigiri_transform.times(Mat4.translation(2.75, 0, 0)), this.materials.salmon);
             }
 
+
+
+
             //set sushi camera pointer
-            this.sushi_cam = roll_transform.times(Mat4.translation(-4, 1, 8));
+            this.sushi_cam = roll_transform.times(Mat4.translation(-12, 2.5, 5))
+                .times(Mat4.rotation(-Math.PI/3, 0, 1, 0))
+                .times(Mat4.rotation(-Math.PI/8, 1, 0, 0));
 
             //draw tray
             this.shapes.cube.draw(context, program_state, tray_transform, shadow_pass ? this.materials.tray : this.materials.pure);
