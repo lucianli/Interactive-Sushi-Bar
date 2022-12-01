@@ -111,8 +111,9 @@ export class SushiBar extends Scene {
             light: new Material(new Phong_Shader(), {
                 color: hex_color("#fff8c5"), ambient: 1, diffusivity: 0, specularity: 0
             }),
-            lightshade: new Material(new Phong_Shader(), {
-                color: hex_color("bb2222"), ambient: 0.8, diffusivity: 1, specularity: 1
+            lightshade: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"), ambient: 1, diffusivity: 0, specularity: 0,
+                texture: new Texture("assets/dragon.jpg")
             }),
             rice: new Material(new Fake_Bump_Map(), {
                 color: hex_color("#111111"),
@@ -141,6 +142,7 @@ export class SushiBar extends Scene {
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 9, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.bar_cam = Mat4.look_at(vec3(0, 9, 20), vec3(0, 0, 0), vec3(0, 1, 0));
 
         this.sushi_cam = this.initial_camera_location;
 
@@ -175,7 +177,7 @@ export class SushiBar extends Scene {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
             this.key_triggered_button("Ring bell for more sushi", ["Control", "r"], () => this.sendMore = true);
             this.new_line();
-            this.key_triggered_button("View bar", ["Control", "b"], () => this.attached = () => this.initial_camera_location);
+            this.key_triggered_button("View bar", ["Control", "b"], () => this.attached = () => this.bar_cam);
             this.new_line();
             this.key_triggered_button("View plate", ["Control", "p"], () => this.attached = () => this.plate_cam);
             this.new_line();
@@ -569,7 +571,7 @@ export class SushiBar extends Scene {
         if (this.attached != undefined)
         {
             let desired;
-            if (this.attached() == this.initial_camera_location)
+            if (this.attached() == this.bar_cam)
             {
                 desired = this.attached();
             }
